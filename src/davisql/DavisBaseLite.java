@@ -11,7 +11,7 @@ import java.util.StringTokenizer;
 
 
 /**
- * @author Chris Irwin Davis
+ * @author Mingyuan Wang
  * @version 1.0
  * <b>This is an example of how to read/write binary data files using RandomAccessFile class</b>
  *
@@ -64,6 +64,7 @@ public class DavisBaseLite {
 			System.out.print(prompt);
 			userCommand = scanner.next().trim();
 			String[] command = userCommand.split("[ ]");
+			ArrayList<String> schemaList = getAllSchemaNames();
 			if ((command[0].equals("SHOW")) && (command[1].equals("SCHEMAS"))){
 				displayAllSchemas();
 			}else if (command[0].equals("USE")) {
@@ -71,6 +72,8 @@ public class DavisBaseLite {
 				//System.out.print(active_schema);
 			}else if ((command[0].equals("CREATE"))&& (command[1].equals("SCHEMA"))) {
 				writeNewSchemaIntoSchemaTable(command[2]);
+//				System.out.print(command[2]);
+//				System.out.print(schemaList.contains(command[2]));
 			}
 			/*
 			 *  This switch handles a very small list of commands of known syntax.
@@ -139,12 +142,11 @@ public class DavisBaseLite {
     		while(length > 0) {
 				byte varcharLength = schemataTableFile.readByte();
 				length -= (int)varcharLength + 1;  // Each time use file length to minus (varcharLength + 1), 1 denotes schema length;
+				StringBuilder sb = new StringBuilder(varcharLength);
 				for(int i = 0; i < varcharLength; i++) {
-					StringBuilder sb = new StringBuilder(varcharLength);
 					sb.append((char)schemataTableFile.readByte());
-					String tmp = sb.toString();
-					schemaList.add(tmp);
 				}
+				schemaList.add(sb.toString());
 			}
     		return schemaList;
     	} 
