@@ -3,6 +3,7 @@ package davisql;
 import java.io.RandomAccessFile;
 import java.io.File;
 import java.io.FileReader;
+import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.SortedMap;
 import java.util.StringTokenizer;
@@ -65,6 +66,11 @@ public class DavisBaseLite {
 			String[] command = userCommand.split("[ ]");
 			if ((command[0].equals("SHOW")) && (command[1].equals("SCHEMAS"))){
 				displayAllSchemas();
+			}else if (command[0].equals("USE")) {
+				active_schema = command[1];
+				//System.out.print(active_schema);
+			}else if ((command[0].equals("CREATE"))&& (command[1].equals("SCHEMA"))) {
+				writeNewSchemaIntoSchemaTable(command[2]);
 			}
 			/*
 			 *  This switch handles a very small list of commands of known syntax.
@@ -108,7 +114,46 @@ public class DavisBaseLite {
 //  STATIC METHOD DEFINTIONS BEGIN HERE
 //  ===========================================================================
 
-
+    private static void writeNewSchemaIntoSchemaTable(String newSchema) {
+    	try {
+    		RandomAccessFile schemataTableFile = new RandomAccessFile("information_schema.schemata.tbl", "rw");
+    		ArrayList<String> schemaList = getAllSchemaNames();
+    		if (!schemaList.contains(newSchema)) {
+    			schemataTableFile.seek(schemataTableFile.length());
+    			schemataTableFile.writeByte(newSchema.length());
+    			schemataTableFile.writeBytes(newSchema);
+    		}else {
+    			System.out.print("The schema you input already exists in database!");
+    		}
+    	} 
+    	catch(Exception e) {
+    		System.out.print(e);
+    	}
+    }
+    
+    private static ArrayList<String> getAllSchemaNames() {
+    	try {
+    		RandomAccessFile schemataTableFile = new RandomAccessFile("information_schema.schemata.tbl", "rw");
+    		ArrayList<String> schemaList = new ArrayList<String>();
+    		int length = (int) schemataTableFile.length();
+    		while(length > 0) {
+				byte varcharLength = schemataTableFile.readByte();
+				length -= (int)varcharLength + 1;  // Each time use file length to minus (varcharLength + 1), 1 denotes schema length;
+				for(int i = 0; i < varcharLength; i++) {
+					StringBuilder sb = new StringBuilder(varcharLength);
+					sb.append((char)schemataTableFile.readByte());
+					String tmp = sb.toString();
+					schemaList.add(tmp);
+				}
+			}
+    		return schemaList;
+    	} 
+    	catch(Exception e) {
+    		return null;
+    	}
+    	
+    }
+    
 	private static void displayAllSchemas() {
 		try {
 			RandomAccessFile schemataTableFile = new RandomAccessFile("information_schema.schemata.tbl", "rw");
@@ -121,10 +166,10 @@ public class DavisBaseLite {
 			System.out.println("+");
 			int length = (int) schemataTableFile.length();
 			//System.out.print(length);
-			while(length > 1) {
+			while(length > 0) {
 				
 				byte varcharLength = schemataTableFile.readByte();
-				length -= (int)varcharLength;
+				length -= (int)varcharLength + 1;  // Each time use file length to minus (varcharLength + 1), 1 denotes schema length;
 				System.out.print("|" + " ");
 				int space = 0;
 				for(int i = 0; i < varcharLength; i++) {
