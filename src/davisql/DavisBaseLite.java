@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.util.Scanner;
 import java.util.SortedMap;
+import java.util.StringTokenizer;
 
 
 
@@ -32,6 +33,7 @@ public class DavisBaseLite {
 	static short quantity;
 	static float probability;
 	
+	
 
     public static void main(String[] args) {
 		/* Display the welcome splash screen */
@@ -55,46 +57,52 @@ public class DavisBaseLite {
 		 */
 		Scanner scanner = new Scanner(System.in).useDelimiter(";");
 		String userCommand; // Variable to collect user input from the prompt
+		String active_schema = "information_schema"; // default schema is system schema: information_schema;
 
 		do {  // do-while !exit
 			System.out.print(prompt);
 			userCommand = scanner.next().trim();
-
+			String[] command = userCommand.split("[ ]");
+			if ((command[0].equals("SHOW")) && (command[1].equals("SCHEMAS"))){
+				displayAllSchemas();
+			}
 			/*
 			 *  This switch handles a very small list of commands of known syntax.
 			 *  You will probably want to write a parse(userCommand) method to
 			 *  to interpret more complex commands. 
 			 */
-			switch (userCommand) {
-				case "SHOW SCHEMAS":
-					displayAllSchemas();
-					break;
-				case "display all":
-					displayAllRecords();
-					break;
-				case "display":
+//			switch (userCommand) {
+//				case "SHOW SCHEMAS":
+//					displayAllSchemas();
+//					break;
+//				case "display all":
+//					displayAllRecords();
+//					break;
+//				case "display":
 					/* 
 					 *  Your record retrieval must use the SELECT-FROM-WHERE syntax
 					 *  This simple syntax allows retrieval of single records based 
 					 *  only on the ID column.
 					 */
-					String recordID = scanner.next().trim();
-					displayRecordID(Integer.parseInt(recordID));
-					break;
-				case "help":
-					help();
-					break;
-				case "version":
-					version();
-					break;
-				default:
-					System.out.println("I didn't understand the command: \"" + userCommand + "\"");
-			}
+//					String recordID = scanner.next().trim();
+//					displayRecordID(Integer.parseInt(recordID));
+//					break;
+//				case "help":
+//					help();
+//					break;
+//				case "version":
+//					version();
+//					break;
+//				default:
+//					System.out.println("I didn't understand the command: \"" + userCommand + "\"");
+//			}
 		} while(!userCommand.equals("exit"));
 		System.out.println("Exiting...");
-	    
+//	    
     } /* End main() method */
 
+    
+    
 
 //  ===========================================================================
 //  STATIC METHOD DEFINTIONS BEGIN HERE
