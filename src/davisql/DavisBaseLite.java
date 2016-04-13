@@ -63,17 +63,21 @@ public class DavisBaseLite {
 		do {  // do-while !exit
 			System.out.print(prompt);
 			userCommand = scanner.next().trim();
-			String[] command = userCommand.split("[ ]");
+			String[] command = userCommand.split("[ ]");  // delimiter: space
 			ArrayList<String> schemaList = getAllSchemaNames();
-			if ((command[0].equals("SHOW")) && (command[1].equals("SCHEMAS"))){
+			if (command[0].equals("SHOW") && command[1].equals("SCHEMAS")){
 				displayAllSchemas();
 			}else if (command[0].equals("USE")) {
 				active_schema = command[1];
-				//System.out.print(active_schema);
-			}else if ((command[0].equals("CREATE"))&& (command[1].equals("SCHEMA"))) {
+				System.out.print(active_schema);
+			}else if (command[0].equals("CREATE") && command[1].equals("SCHEMA")) {
 				writeNewSchemaIntoSchemaTable(command[2]);
 //				System.out.print(command[2]);
 //				System.out.print(schemaList.contains(command[2]));
+			}else if (command[0].equals("SHOW") && command[1].equals("TABLES")){
+				if (active_schema.equals("information_schema")) {
+					displayTablesInSystemSchema();
+				}
 			}
 			/*
 			 *  This switch handles a very small list of commands of known syntax.
@@ -116,7 +120,29 @@ public class DavisBaseLite {
 //  ===========================================================================
 //  STATIC METHOD DEFINTIONS BEGIN HERE
 //  ===========================================================================
-
+    private static void displayTablesInSystemSchema() {
+    	try {
+    		RandomAccessFile systemTableFile = new RandomAccessFile("information_schema.table.tbl", "rw");
+    		System.out.print("+");
+			System.out.print(line("-", 14));
+			System.out.println("+");
+			System.out.println("|" + " " + "TABLE_NAME" + line(" ",3) + "|");
+			System.out.print("+");
+			System.out.print(line("-", 14));
+			System.out.println("+");
+			int space = "TABLE_NAME".length();
+			System.out.println("|" + " " + "SCHEMATA" + line(" ", 3 + space - "SCHEMATA".length()) + "|");
+			System.out.println("|" + " " +  "TABLES" + line(" ", 3 + space - "TABLES".length()) + "|");
+			System.out.println("|" + " " + "COLUMNS" + line(" ", 3 + space - "COLUMNS".length()) + "|");
+			System.out.print("+");
+			System.out.print(line("-", 14));
+			System.out.println("+");
+			
+    	}
+    	catch(Exception e) {
+    		System.out.print(e);
+    	}
+    }
     private static void writeNewSchemaIntoSchemaTable(String newSchema) {
     	try {
     		RandomAccessFile schemataTableFile = new RandomAccessFile("information_schema.schemata.tbl", "rw");
@@ -126,7 +152,7 @@ public class DavisBaseLite {
     			schemataTableFile.writeByte(newSchema.length());
     			schemataTableFile.writeBytes(newSchema);
     		}else {
-    			System.out.print("The schema you input already exists in database!");
+    			System.out.println();
     		}
     	} 
     	catch(Exception e) {
