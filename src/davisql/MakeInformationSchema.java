@@ -8,11 +8,11 @@ public class MakeInformationSchema {
 	public static void main(String[] args) {
 		try {
 			/* FIXME: Put all binary data files in a separate subdirectory (subdirectory tree?) */
-			/* FIXME: Should there not be separate Class static variables for the file names?
+			/* FIXME: Should there not be separate Class static variables for the file names? 
 			 *        and just hard code them here?
 			 */
-			/* TODO: Should there be separate methods to checkfor and subsequently create each file
-			 *       granularly, instead of a big bang all or nothing?
+			/* TODO: Should there be separate methods to checkfor and subsequently create each file 
+			 *       granularly, instead of a big bang all or nothing? 
 			 */
 			RandomAccessFile schemataTableFile = new RandomAccessFile("information_schema.schemata.tbl", "rw");
 			RandomAccessFile tablesTableFile = new RandomAccessFile("information_schema.table.tbl", "rw");
@@ -26,9 +26,7 @@ public class MakeInformationSchema {
 			// ROW 1: information_schema.schemata.tbl
 			schemataTableFile.writeByte("information_schema".length());
 			schemataTableFile.writeBytes("information_schema");
-			schemataTableFile.writeByte("Zoo_schema".length());
-			schemataTableFile.writeBytes("Zoo_schema");
-			
+
 			/*
 			 *  Create the TABLES table file.
 			 *  Remember!!! Column names are not stored in the tables themselves
@@ -58,12 +56,6 @@ public class MakeInformationSchema {
 			tablesTableFile.writeBytes("COLUMNS");
 			tablesTableFile.writeLong(7); // TABLE_ROWS
 
-			// ROW 4: information_schema.tables.tbl
-			tablesTableFile.writeByte("Zoo_schema".length()); // TABLE_SCHEMA
-			tablesTableFile.writeBytes("Zoo_schema");
-			tablesTableFile.writeByte("Zoo".length());  // TABLE_NAME
-			tablesTableFile.writeBytes("Zoo");
-			tablesTableFile.writeLong(0);
 			/*
 			 *  Create the COLUMNS table file.
 			 *  Initially it has 11 rows:
@@ -237,7 +229,6 @@ public class MakeInformationSchema {
 		catch(Exception e) {
 			System.out.println(e);
 		}
-
+		
 	}
 }
-

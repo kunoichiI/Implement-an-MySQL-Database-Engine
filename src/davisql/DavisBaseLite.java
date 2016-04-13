@@ -6,12 +6,20 @@ import java.io.FileReader;
 import java.util.Scanner;
 import java.util.SortedMap;
 
+
+
+/**
+ * @author Chris Irwin Davis
+ * @version 1.0
+ * <b>This is an example of how to read/write binary data files using RandomAccessFile class</b>
+ *
+ */
 public class DavisBaseLite {
 	// This can be changed to whatever you like
 	static String prompt = "davisql> ";
-
+	
 	/*
-	 *  This example does not dynamically load a table schema to be able to
+	 *  This example does not dynamically load a table schema to be able to 
 	 *  read/write any table -- there is exactly ONE hardcoded table schema.
 	 *  These are the variables associated with that hardecoded table schema.
 	 *  Your database engine will need to define these on-the-fly from
@@ -23,22 +31,22 @@ public class DavisBaseLite {
 	static String name;
 	static short quantity;
 	static float probability;
-
+	
 
     public static void main(String[] args) {
 		/* Display the welcome splash screen */
 		splashScreen();
 		
-		/*
-		 *  Manually create a binary data file for the single hardcoded
-		 *  table. It inserts 5 hardcoded records. The schema is inherent
+		/* 
+		 *  Manually create a binary data file for the single hardcoded 
+		 *  table. It inserts 5 hardcoded records. The schema is inherent 
 		 *  in the code, pre-defined, and static.
-		 *
+		 *  
 		 *  An index file for the ID field is created at the same time.
 		 */
 		hardCodedCreateTableWithIndex();
 
-		/*
+		/* 
 		 *  The Scanner class is used to collect user commands from the prompt
 		 *  There are many ways to do this. This is just one.
 		 *
@@ -55,19 +63,19 @@ public class DavisBaseLite {
 			/*
 			 *  This switch handles a very small list of commands of known syntax.
 			 *  You will probably want to write a parse(userCommand) method to
-			 *  to interpret more complex commands.
+			 *  to interpret more complex commands. 
 			 */
 			switch (userCommand) {
-			    case "SHOW SCHEMAS":
-			    	displayAllSchemas();
-			    	break;
+				case "SHOW SCHEMAS":
+					displayAllSchemas();
+					break;
 				case "display all":
 					displayAllRecords();
 					break;
 				case "display":
-					/*
+					/* 
 					 *  Your record retrieval must use the SELECT-FROM-WHERE syntax
-					 *  This simple syntax allows retrieval of single records based
+					 *  This simple syntax allows retrieval of single records based 
 					 *  only on the ID column.
 					 */
 					String recordID = scanner.next().trim();
@@ -84,7 +92,7 @@ public class DavisBaseLite {
 			}
 		} while(!userCommand.equals("exit"));
 		System.out.println("Exiting...");
-
+	    
     } /* End main() method */
 
 
@@ -93,23 +101,62 @@ public class DavisBaseLite {
 //  ===========================================================================
 
 
+	private static void displayAllSchemas() {
+		try {
+			RandomAccessFile schemataTableFile = new RandomAccessFile("information_schema.schemata.tbl", "rw");
+			System.out.print("+");
+			System.out.print(line("-", 22));
+			System.out.println("+");
+			System.out.println("|" + " " + "SCHEMA_NAME" + line(" ",10) + "|");
+			System.out.print("+");
+			System.out.print(line("-", 22));
+			System.out.println("+");
+			int length = (int) schemataTableFile.length();
+			//System.out.print(length);
+			while(length > 1) {
+				
+				byte varcharLength = schemataTableFile.readByte();
+				length -= (int)varcharLength;
+				System.out.print("|" + " ");
+				int space = 0;
+				for(int i = 0; i < varcharLength; i++) {
+					if (varcharLength > "SCHEMA_NAME".length()) {
+						space = 10 - (varcharLength - "SCHEMA_NAME".length());
+					} else {
+						space = 10 + ("SCHEMA_NAME".length() -varcharLength);
+					}
+					System.out.print((char)schemataTableFile.readByte());
+				}
+				System.out.print(line(" ",space) + "|");
+				System.out.println();
+			}
+			System.out.print("+");
+			System.out.print(line("-", 22));
+			System.out.println("+");
+		}
+		catch(Exception e) {
+			System.out.println(e);
+		}
+	}
+
+
 	/**
 	 *  Help: Display supported commands
 	 */
 	public static void help() {
 		System.out.println(line("*",80));
 		System.out.println();
-		System.out.println("\tSHOW SCHEMAS;   Show all schemas in the database.");
-		System.out.println("\tdisplay all;    Display all records in the table.");
-		System.out.println("\tdisplay; <id>;  Display records whose ID is <id>.");
-		System.out.println("\tversion;        Show the program version.");
-		System.out.println("\thelp;           Show this help information");
-		System.out.println("\texit;           Exit the program");
+		System.out.println("\tSHOW SCHEMAS;  Show all schemas' names in system tables.");
+		System.out.println("\tdisplay all;   Display all records in the table.");
+		System.out.println("\tdisplay; <id>;     Display records whose ID is <id>.");
+		System.out.println("\tversion;       Show the program version.");
+		System.out.println("\thelp;          Show this help information");
+		System.out.println("\texit;          Exit the program");
 		System.out.println();
 		System.out.println();
 		System.out.println(line("*",80));
 	}
-
+	
 	/**
 	 *  Display the welcome "splash screen"
 	 */
@@ -133,7 +180,7 @@ public class DavisBaseLite {
 		}
 		return a;
 	}
-
+	
 	/**
 	 * @param num The number of newlines to be displayed to <b>stdout</b>
 	 */
@@ -142,47 +189,15 @@ public class DavisBaseLite {
 			System.out.println();
 		}
 	}
-
+	
 	public static void version() {
 		System.out.println("DavisBaseLite v1.0\n");
 	}
-	public static void displayAllSchemas() {
-		try {
-			RandomAccessFile schemaTableFile = new RandomAccessFile("information_schema.schemata.tbl", "rw");
-			System.out.print("+");
-			System.out.print(line("-", 22));
-			System.out.println("+");
-			System.out.println("|" + " " + "SCHEMA_NAME" + line(" ",10) + "|");
-			System.out.print("+");
-			System.out.print(line("-", 22));
-			System.out.println("+");
-			for (int schema = 0; schema < 2; schema++) {
-				byte varcharLength = schemaTableFile.readByte();
-				System.out.print("|" + " ");
-				int space = 0;
-				for(int i = 0; i < varcharLength; i++) {
-					if (varcharLength > "SCHEMA_NAME".length()) {
-						space = 10 - (varcharLength - "SCHEMA_NAME".length());
-					} else {
-						space = 10 + ("SCHEMA_NAME".length() -varcharLength);
-					}
-					System.out.print((char)schemaTableFile.readByte());
-				}
-				System.out.print(line(" ",space) + "|");
-				System.out.println();
-			}
-			System.out.print("+");
-			System.out.print(line("-", 22));
-			System.out.println("+");
-		}
-		catch(Exception e) {
-			System.out.println(e);
-		}
-	}
+
 
 	/**
 	 *  This method reads a binary table file using a hard-coded table schema.
-	 *  Your query must be able to read a binary table file using a dynamically
+	 *  Your query must be able to read a binary table file using a dynamically 
 	 *  constructed table schema from the information_schema
 	 */
 	public static void displayAllRecords() {
@@ -223,7 +238,7 @@ public class DavisBaseLite {
 
 			/*
 			 *  Use exhaustive brute force seach over the binary index file to locate
-			 *  the requested ID values. Then use its assoicated address to seek the
+			 *  the requested ID values. Then use its assoicated address to seek the 
 			 *  record in the widget table binary data file.
 			 *
 			 *  You may instead want to load the binary index file into a HashMap
@@ -237,11 +252,11 @@ public class DavisBaseLite {
 					indexOfRecord = tableIdIndex.readLong();
 					recordFound = true;
 				}
-				/*
+				/* 
 				 *  Each index entry uses 12 bytes: ID=4-bytes + address=8-bytes
 				 *  Move ahead 12 bytes in the index file for each while() loop
 				 *  iteration to increment through index entries.
-				 *
+				 * 
 				 */
 				indexFileLocation += 12;
 			}
@@ -266,7 +281,7 @@ public class DavisBaseLite {
 	 *  This method is hard-coded to create a binary table file with 5 records
 	 *  It also creates an index file for the ID field
 	 *  It is based on the following table schema:
-	 *
+	 *  
 	 *  CREATE TABLE table (
 	 *      id unsigned int primary key,
 	 *      name varchar(25),
@@ -276,16 +291,15 @@ public class DavisBaseLite {
 	 */
 	public static void hardCodedCreateTableWithIndex() {
 		long recordPointer;
-		
 		try {
 			RandomAccessFile widgetTableFile = new RandomAccessFile(widgetTableFileName, "rw");
 			RandomAccessFile tableIdIndex = new RandomAccessFile(tableIdIndexName, "rw");
-
+			
 			id = 1;
 			name = "alpha";
 			quantity = 847;
 			probability = 0.341f;
-
+			
 			tableIdIndex.writeInt(id);
 			tableIdIndex.writeLong(widgetTableFile.getFilePointer());
 			widgetTableFile.writeInt(id);
@@ -293,12 +307,12 @@ public class DavisBaseLite {
 			widgetTableFile.writeBytes(name);
 			widgetTableFile.writeShort(quantity);
 			widgetTableFile.writeFloat(probability);
-
+			
 			id = 2;
 			name = "beta";
 			quantity = 1472;
 			probability = 0.89f;
-
+			
 			tableIdIndex.writeInt(id);
 			tableIdIndex.writeLong(widgetTableFile.getFilePointer());
 			widgetTableFile.writeInt(id);
@@ -311,7 +325,7 @@ public class DavisBaseLite {
 			name = "gamma";
 			quantity = 41;
 			probability = 0.5f;
-
+			
 			tableIdIndex.writeInt(id);
 			tableIdIndex.writeLong(widgetTableFile.getFilePointer());
 			widgetTableFile.writeInt(id);
@@ -324,7 +338,7 @@ public class DavisBaseLite {
 			name = "delta";
 			quantity = 4911;
 			probability = 0.4142f;
-
+			
 			tableIdIndex.writeInt(id);
 			tableIdIndex.writeLong(widgetTableFile.getFilePointer());
 			widgetTableFile.writeInt(id);
@@ -337,7 +351,7 @@ public class DavisBaseLite {
 			name = "epsilon";
 			quantity = 6823;
 			probability = 0.618f;
-
+			
 			tableIdIndex.writeInt(id);
 			tableIdIndex.writeLong(widgetTableFile.getFilePointer());
 			widgetTableFile.writeInt(id);
@@ -345,14 +359,12 @@ public class DavisBaseLite {
 			widgetTableFile.writeBytes(name);
 			widgetTableFile.writeShort(quantity);
 			widgetTableFile.writeFloat(probability);
-			
-			
 		}
 		catch(Exception e) {
 			System.out.println(e);
 		}
-		
 	}
 
 }
+
 
