@@ -64,7 +64,11 @@ public class DavisBaseLite {
 					displayTablesInOtherSchema(active_schema);
 				}
 			}else if (command[0].equals("CREATE") && command[1].equals("TABLE")){  // CREATE TABLE command
-				createTableToSelectedSchema(command[2], command[3], active_schema);
+				//System.out.print(command[2]);
+				String parameters = userCommand.substring(15 + command[2].length(), userCommand.length()-1);
+				
+				createTableToSelectedSchema(command[2], parameters, active_schema);
+				//System.out.print(parseTableParameters(parameters));
 			}
 		} while(!userCommand.equals("exit"));
 		System.out.println("Exiting...");
@@ -76,22 +80,21 @@ public class DavisBaseLite {
 //  STATIC METHOD DEFINTIONS BEGIN HERE
 //  =========================================================================== 
     private static String[] parseTableParameters(String parameters) {
-    	StringBuilder sb = new StringBuilder(parameters);
-    	sb.deleteCharAt(0);
-    	sb.deleteCharAt(sb.length()); // delete "(" and ")" in parameters
-    	String[] lines = sb.toString().split("[,]");
-    	return lines;
+    	String[] list = parameters.split(",");
+    	return list;
     }
     private static void createTableToSelectedSchema(String tablename,
-			String parameters, String schema) {
+			String command, String schema) {
 		// create table in selected schema and its index files
     	
     	try {
     		RandomAccessFile systemTableFile = new RandomAccessFile("information_schema.table.tbl", "rw");
     		RandomAccessFile systemColumnFile = new RandomAccessFile("information_schema.columns.tbl","rw");
     		RandomAccessFile tableFile = new RandomAccessFile(schema + "." + tablename + ".tbl","rw");
-    		String[] lines = parseTableParameters(parameters);
-    		
+    		String[] lines = parseTableParameters(command);
+//    		for (int i = 0; i< lines.length;i++) {
+//    			System.out.print(Integer.toString(i) + lines[i]);
+//    		}
     		// write table schema to information_schema.table.tbl	
     		systemTableFile.seek(systemTableFile.length());  // start writing from the end of last revised file
     		systemTableFile.writeByte(schema.length());   // Table schema
@@ -114,13 +117,17 @@ public class DavisBaseLite {
     			systemColumnFile.writeBytes(schema);
     			systemColumnFile.writeByte(tablename.length());   // Table name
     			systemColumnFile.writeBytes(tablename);
-    			String[] tmp = lines[i-1].split("[ ]");
+    			String[] tmp = lines[i-1].trim().split("[ ]");
+    			for (int j = 0; j < tmp.length; j++) {
+    				System.out.println(Integer.toString(j) + tmp[j]);
+    			}
     			systemColumnFile.writeByte(tmp[0].length());  // Column name
     			systemColumnFile.writeBytes(tmp[0]);
     			systemColumnFile.writeInt(i);  // Ordinal position 
     			systemColumnFile.writeByte(tmp[1].length()); // Column type
     			systemColumnFile.writeBytes(tmp[1]);
-    			if (lines[i-1].length() == 4) {
+    			//System.out.print(tmp[0]);
+    			if (tmp.length == 4) {
     				if (tmp[2].equals("PRIMARY") && tmp[3].equals("KEY")){
     					systemColumnFile.writeByte("NO".length());  // IS_Nullable (Not NULL)
     					systemColumnFile.writeBytes("NO");
