@@ -58,15 +58,15 @@ public class DavisBaseLite {
 //				System.out.print(command[2]);
 //				System.out.print(schemaList.contains(command[2]));
 			}else if (command[0].equals("SHOW") && command[1].equals("TABLES")){  // SHOW TABLES command
-				if (active_schema.equals("information_schema")) {
-					displayTablesInSystemSchema();
-				}else {
-					displayTablesInOtherSchema(active_schema);
-				}
+//				if (active_schema.equals("information_schema")) {
+//					displayTablesInSystemSchema();
+//				}else {
+//					displayTablesInOtherSchema(active_schema);
+//				}
+				displayTablesInSelectedSchema(active_schema);
 			}else if (command[0].equals("CREATE") && command[1].equals("TABLE")){  // CREATE TABLE command
 				//System.out.print(command[2]);
 				String parameters = userCommand.substring(15 + command[2].length(), userCommand.length()-1);
-				
 				createTableToSelectedSchema(command[2], parameters, active_schema);
 				//System.out.print(parseTableParameters(parameters));
 			}
@@ -79,7 +79,63 @@ public class DavisBaseLite {
 //  ===========================================================================
 //  STATIC METHOD DEFINTIONS BEGIN HERE
 //  =========================================================================== 
-    private static String[] parseTableParameters(String parameters) {
+    
+    private static void displayTablesInSelectedSchema(String active_schema) {
+		try {
+			RandomAccessFile systemTableFile = new RandomAccessFile("information_schema.table.tbl", "rw");
+    		formatTableEdge("TABLE_NAME", 14, 3);
+			if (active_schema.equals("information_schema")){ // Search from the start of information_schema.table.tbl file
+				int space = "TABLE_NAME".length();
+				// Default tables in information_schema: schemata, tables and columns
+//				System.out.println("|" + " " + "SCHEMATA" + line(" ", 3 + space - "SCHEMATA".length()) + "|");
+//				System.out.println("|" + " " +  "TABLES" + line(" ", 3 + space - "TABLES".length()) + "|");
+//				System.out.println("|" + " " + "COLUMNS" + line(" ", 3 + space - "COLUMNS".length()) + "|");
+//				System.out.print("+");
+//				System.out.print(line("-", 14));
+//				System.out.println("+");
+				// Search for any table created by user
+				ArrayList<String> tablenameList = new ArrayList<String>();
+				tablenameList.add("SCHEMATA");
+				tablenameList.add("TABLES");
+				tablenameList.add("COLUMNS");
+				int location_schema = 105; // end location of default rows;
+				int len = active_schema.length(); 
+				int fileLen = (int) systemTableFile.length(); // current length:136
+				systemTableFile.seek(location_schema);
+				int schemaLen = (int)(systemTableFile.readByte());
+				StringBuilder sb = new StringBuilder();
+				while(fileLen > location_schema) {
+					for (int i = 0; i < schemaLen; i++) {
+						sb.append((char)systemTableFile.readByte());
+					}
+					if (sb.toString().equals(active_schema)){
+						location_schema += 1 + len;
+						systemTableFile.seek(location_schema);
+						sb.setLength(0); // clear stringBuilder
+						int h = (int)systemTableFile.readByte();
+						//System.out.print(h);
+						for (int i = 0; i < h; i++) {
+							sb.append((char)systemTableFile.readByte());
+						}
+						tablenameList.add(sb.toString());
+						location_schema += 1 + h + 8;
+					}
+				}
+				for (String s: tablenameList) {
+					System.out.println("|" + " " + s + line(" ", 3 + space - s.length()) + "|");
+					System.out.print("+");
+					System.out.print(line("-", 14));
+					System.out.println("+");
+				}
+			}
+		}
+		catch(Exception e) {
+			System.out.print(e);
+		}
+   }
+
+
+	private static String[] parseTableParameters(String parameters) {
     	String[] list = parameters.split(",");
     	return list;
     }
@@ -95,6 +151,7 @@ public class DavisBaseLite {
 //    		for (int i = 0; i< lines.length;i++) {
 //    			System.out.print(Integer.toString(i) + lines[i]);
 //    		}
+    		//System.out.print(systemTableFile.length());  105
     		// write table schema to information_schema.table.tbl	
     		systemTableFile.seek(systemTableFile.length());  // start writing from the end of last revised file
     		systemTableFile.writeByte(schema.length());   // Table schema
@@ -118,9 +175,9 @@ public class DavisBaseLite {
     			systemColumnFile.writeByte(tablename.length());   // Table name
     			systemColumnFile.writeBytes(tablename);
     			String[] tmp = lines[i-1].trim().split("[ ]");
-    			for (int j = 0; j < tmp.length; j++) {
-    				System.out.println(Integer.toString(j) + tmp[j]);
-    			}
+//    			for (int j = 0; j < tmp.length; j++) {
+//    				System.out.println(Integer.toString(j) + tmp[j]);
+//    			}
     			systemColumnFile.writeByte(tmp[0].length());  // Column name
     			systemColumnFile.writeBytes(tmp[0]);
     			systemColumnFile.writeInt(i);  // Ordinal position 
@@ -154,51 +211,7 @@ public class DavisBaseLite {
     	}
 		
 	}
-
-    
-    private static void displayTablesInSystemSchema() {
-    	try {
-    		RandomAccessFile systemTableFile = new RandomAccessFile("information_schema.table.tbl", "rw");
-    		formatTableEdge("TABLE_NAME", 14, 3);
-			int space = "TABLE_NAME".length();
-			System.out.println("|" + " " + "SCHEMATA" + line(" ", 3 + space - "SCHEMATA".length()) + "|");
-			System.out.println("|" + " " +  "TABLES" + line(" ", 3 + space - "TABLES".length()) + "|");
-			System.out.println("|" + " " + "COLUMNS" + line(" ", 3 + space - "COLUMNS".length()) + "|");
-			System.out.print("+");
-			System.out.print(line("-", 14));
-			System.out.println("+");
-			
-    	}
-    	catch(Exception e) {
-    		System.out.print(e);
-    	}
-    }
-    
-    private static void displayTablesInOtherSchema(String schema) {
-		//exhaustive brute-force search tables in selected schema;
-    	try {
-    		RandomAccessFile systemTableFile = new RandomAccessFile("information_schema.table.tbl", "rw");
-    		int location_schema = 105;
-    		if (systemTableFile.length() == location_schema) {
-    			return;  // No table in this selected non-system schema;
-    		}
-    		systemTableFile.seek(location_schema); // 105 is the file position to write non-system schema tables.
-    		int length = schema.length();
-    		if ((int)systemTableFile.readByte() == length) {
-    			location_schema++;
-    			StringBuilder sb = new StringBuilder();
-    			for (int i = 0; i < length; i++) {
-    				sb.append(systemTableFile.readByte());
-    			}
-    			
-    		}
-    	}
-    	catch(Exception e) {
-    		System.out.print(e);
-    	}
-    }
-    
-    
+ 
     private static void writeNewSchemaIntoSchemaTable(String newSchema) {
     	try {
     		RandomAccessFile schemataTableFile = new RandomAccessFile("information_schema.schemata.tbl", "rw");
