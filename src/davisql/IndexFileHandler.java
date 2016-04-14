@@ -8,7 +8,6 @@ import java.util.Map.Entry;
 public class IndexFileHandler {
 
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
 		System.out.println("Index Example as TreeMap");
 		System.out.println("TreeMap will keep keys in sorted order.");
 
@@ -19,7 +18,7 @@ public class IndexFileHandler {
 		 * Alternatively, a safer implementation would create separate handler
 		 * for each key data type.
 		 */
-		TreeMap<Object, ArrayList> columnIndex = new TreeMap();
+		TreeMap<Object, ArrayList<Integer>> columnIndex = new TreeMap<Object, ArrayList<Integer>>();
 		/* The ArrayList tableAddresses will potentially hold more than one
 		 * table address if the index is on a non-unique attribute of the table
 		 */
@@ -60,10 +59,10 @@ public class IndexFileHandler {
 		 * If you use this TreeMap strategy, your implementation
 		 * can use a similar iteration to overwrite an updated .ndx file
 		 * */
-		for(Entry<Object,ArrayList> entry : columnIndex.entrySet()) {
+		for(Entry<Object, ArrayList<Integer>> entry : columnIndex.entrySet()) {
 			Object key = entry.getKey();         // Get the index key
 			System.out.print(key + " => ");       // Display the index key
-			ArrayList value = entry.getValue();   // Get the list of record addresses
+			ArrayList<Integer>value = entry.getValue();   // Get the list of record addresses
 			System.out.print("[" + value.get(0)); // Display the first address
 			for(int i=1; i < value.size();i++) {  // Check for and display additional addresses for non-unique indexes
 				System.out.print("," + value.get(i));
