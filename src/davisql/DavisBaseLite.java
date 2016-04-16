@@ -4,6 +4,7 @@ import java.io.RandomAccessFile;
 import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Scanner;
 import java.util.SortedMap;
 import java.util.StringTokenizer;
@@ -42,6 +43,16 @@ public class DavisBaseLite {
 		Scanner scanner = new Scanner(System.in).useDelimiter(";");
 		String userCommand; // Variable to collect user input from the prompt
 		String active_schema = "information_schema"; // default schema is system schema: information_schema;
+		HashMap<String, ArrayList<String>> schema_table_list = new HashMap<String, ArrayList<String>>(); // to keep tables of all schemas
+		schema_table_list.put(active_schema, new ArrayList<String>());
+		schema_table_list.put("Zoo_schema", new ArrayList<String>());
+		// tables which already exist in all schemas.
+		schema_table_list.get(active_schema).add("SCHEMATA");
+		schema_table_list.get(active_schema).add("TABLES");
+		schema_table_list.get(active_schema).add("COLUMNS");
+		schema_table_list.get(active_schema).add("Zoo");
+		schema_table_list.get("Zoo_schema").add("Zoo");
+		
 
 		do {  // do-while !exit
 			System.out.print(prompt);
@@ -58,12 +69,7 @@ public class DavisBaseLite {
 //				System.out.print(command[2]);
 //				System.out.print(schemaList.contains(command[2]));
 			}else if (command[0].equals("SHOW") && command[1].equals("TABLES")){  // SHOW TABLES command
-//				if (active_schema.equals("information_schema")) {
-//					displayTablesInSystemSchema();
-//				}else {
-//					displayTablesInOtherSchema(active_schema);
-//				}
-				displayTablesInSelectedSchema(active_schema);
+				displayTablesInSelectedSchema(active_schema, schema_table_list);
 			}else if (command[0].equals("CREATE") && command[1].equals("TABLE")){  // CREATE TABLE command
 				//System.out.print(command[2]);
 				String parameters = userCommand.substring(15 + command[2].length(), userCommand.length()-1);
@@ -72,7 +78,7 @@ public class DavisBaseLite {
 			}
 		} while(!userCommand.equals("exit"));
 		System.out.println("Exiting...");
-//	    
+		
     } /* End main() method */
 
     
@@ -80,52 +86,23 @@ public class DavisBaseLite {
 //  STATIC METHOD DEFINTIONS BEGIN HERE
 //  =========================================================================== 
     
-    private static void displayTablesInSelectedSchema(String active_schema) {
-		try {
-			RandomAccessFile systemTableFile = new RandomAccessFile("information_schema.table.tbl", "rw");
-    		formatTableEdge("TABLE_NAME", 14, 3);
-    		
-    		int location_schema = 105; // end location of default rows;
-			int len = active_schema.length(); 
-			int fileLen = (int) systemTableFile.length(); // current length:136
-			int space = "TABLE_NAME".length();
-			systemTableFile.seek(location_schema);
-    		ArrayList<String> tablenameList = new ArrayList<String>(); // arraylist that contains all tables in selected schema
-    		if (active_schema.equals("information_schema")) {
-    			tablenameList.add("SCHEMATA");
-    			tablenameList.add("TABLES");
-    			tablenameList.add("COLUMNS");
-    		}
-			// add any table created by user
-			int schemaLen = (int)(systemTableFile.readByte());
-			StringBuilder sb = new StringBuilder();
-			while(fileLen > location_schema) {
-				for (int i = 0; i < schemaLen; i++) {
-					sb.append((char)systemTableFile.readByte());
-				}
-				if (sb.toString().equals(active_schema)){
-					location_schema += 1 + len;
-					systemTableFile.seek(location_schema);
-					sb.setLength(0); // clear stringBuilder
-					int h = (int)systemTableFile.readByte();
-					//System.out.print(h);
-					for (int i = 0; i < h; i++) {
-						sb.append((char)systemTableFile.readByte());
-					}
-					tablenameList.add(sb.toString());
-					location_schema += 1 + h + 8;
-				}
+    private static void displayTablesInSelectedSchema(String active_schema, HashMap<String, ArrayList<String>> schema_table_list) {
+		ArrayList<String> table_list = schema_table_list.get(active_schema);
+		formatTableEdge("TABLE_NAME", 14, 3);
+		for (String table: table_list) {
+			System.out.print("|" + " ");
+			int tableLen = table.length();
+			int tableNameLen = "TABLE_NAME".length();
+			int space;
+			if (tableLen> tableNameLen) {
+				space = 3 - (tableLen - tableNameLen);
+			}else {
+				space = 3 + (tableNameLen - tableLen);
 			}
-			for (String s: tablenameList) {
-				System.out.println("|" + " " + s + line(" ", 3 + space - s.length()) + "|");
-				System.out.print("+");
-				System.out.print(line("-", 14));
-				System.out.println("+");
-			}
+			System.out.print(table + line(" ",space) + "|");
+			System.out.println();
 		}
-		catch(Exception e) {
-			System.out.print(e);
-		}
+		System.out.println("+" + line("-", 14) + "+");
    }
 
 
