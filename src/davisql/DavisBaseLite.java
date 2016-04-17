@@ -65,7 +65,10 @@ public class DavisBaseLite {
 				active_schema = command[1];
 				//System.out.print(active_schema);
 			}else if (command[0].equals("CREATE") && command[1].equals("SCHEMA")) { // CREATE SCHEMA command
-				writeNewSchemaIntoSchemaTable(command[2]);
+				if (!schema_table_list.containsKey(command[2])){
+					writeNewSchemaIntoSchemaTable(command[2]);
+					schema_table_list.put(command[2], new ArrayList<String>());
+				}
 //				System.out.print(command[2]);
 //				System.out.print(schemaList.contains(command[2]));
 			}else if (command[0].equals("SHOW") && command[1].equals("TABLES")){  // SHOW TABLES command
@@ -73,8 +76,14 @@ public class DavisBaseLite {
 			}else if (command[0].equals("CREATE") && command[1].equals("TABLE")){  // CREATE TABLE command
 				//System.out.print(command[2]);
 				String parameters = userCommand.substring(15 + command[2].length(), userCommand.length()-1);
-				createTableToSelectedSchema(command[2], parameters, active_schema);
-				//System.out.print(parseTableParameters(parameters));
+				if (!schema_table_list.get(active_schema).contains(command[2])){
+					createTableToSelectedSchema(command[2], parameters, active_schema);
+					schema_table_list.get(active_schema).add(command[2]);
+				}
+			}else if (command[0].equals("INSERT") && command[1].equals("INTO") && command[2].equals("TABLE")){ // INSERT INTO TABLE command
+				if (schema_table_list.get(active_schema).contains(command[3])) {
+					
+				}
 			}
 		} while(!userCommand.equals("exit"));
 		System.out.println("Exiting...");
@@ -156,12 +165,12 @@ public class DavisBaseLite {
     			systemColumnFile.writeBytes(tmp[1]);
     			//System.out.print(tmp[0]);
     			if (tmp.length == 4) {
-    				if (tmp[2].equals("PRIMARY") && tmp[3].equals("KEY")){
+    				if ((tmp[2].equals("PRIMARY") && tmp[3].equals("KEY")) || (tmp[2].equals("primary") && tmp[3].equals("key"))){
     					systemColumnFile.writeByte("NO".length());  // IS_Nullable (Not NULL)
     					systemColumnFile.writeBytes("NO");
     					systemColumnFile.writeByte("PRI".length()); // Column key (PRI)
     					systemColumnFile.writeBytes("PRI");
-    				}else if (tmp[2].equals("NOT") && tmp[3].equals("NULL")){
+    				}else if ((tmp[2].equals("NOT") && tmp[3].equals("NULL")) ||(tmp[2].equals("not") && tmp[3].equals("null"))){
     					systemColumnFile.writeByte("NO".length()); // IS_Nullable (NOT NULL)
     					systemColumnFile.writeBytes("NO");
     					systemColumnFile.writeByte("".length());  // Column key (empty)
